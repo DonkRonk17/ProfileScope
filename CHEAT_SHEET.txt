@@ -1,0 +1,415 @@
+================================================================================
+PROFILESCOPE CHEAT SHEET
+================================================================================
+
+QUICK START
+-----------
+1. Clone: git clone https://github.com/DonkRonk17/ProfileScope.git
+2. Run: python profilescope.py --help
+3. Profile: profilescope run script.py
+
+================================================================================
+COMMON COMMANDS
+--------------------------------------------------------------------------------
+
+Profile a Script:
+  profilescope run script.py
+  profilescope run script.py --tree
+  profilescope run script.py arg1 arg2  # With arguments
+
+Save Reports:
+  profilescope run script.py --format json
+  profilescope run script.py --format markdown
+  profilescope run script.py --format html
+
+Custom Output Directory:
+  profilescope run script.py --format json --output-dir ./reports
+
+Compare Runs (Regression Detection):
+  profilescope compare baseline.json current.json
+
+Help:
+  profilescope --help
+  profilescope run --help
+  profilescope compare --help
+
+Version:
+  profilescope --version
+
+================================================================================
+CLI FLAGS & OPTIONS
+--------------------------------------------------------------------------------
+
+Global Options:
+  --version              Show version and exit
+  --help                 Show help message
+
+run Command:
+  script                 Python script to profile (required)
+  script_args            Arguments to pass to script (optional)
+  --format FORMAT        Output format: terminal|json|markdown|html (default: terminal)
+  --tree                 Show call tree summary
+  --output-dir DIR       Output directory for reports (default: ./profilescope_reports)
+
+compare Command:
+  baseline               Baseline JSON report (required)
+  current                Current JSON report (required)
+
+================================================================================
+PYTHON API
+--------------------------------------------------------------------------------
+
+Import:
+  from profilescope import ProfileScope, ProfileReport, FunctionStats
+  from pathlib import Path
+
+Basic Usage:
+  profiler = ProfileScope()
+  report = profiler.profile(Path("script.py"))
+  print(f"Total time: {report.total_time:.3f}s")
+
+With Custom Output Directory:
+  profiler = ProfileScope(output_dir=Path("./my_reports"))
+
+Profile with Arguments:
+  report = profiler.profile(Path("script.py"), script_args=["arg1", "arg2"])
+
+Access Report Data:
+  report.script_path          # str: Path to profiled script
+  report.total_time           # float: Total execution time (seconds)
+  report.total_calls          # int: Total function calls
+  report.hot_functions        # List[FunctionStats]: Top functions by time
+  report.bottlenecks          # List[str]: Detected bottlenecks
+  report.call_tree            # Dict: Call tree summary
+  report.recommendations      # List[str]: Optimization suggestions
+  report.timestamp            # str: When profile was run
+
+Access Function Stats:
+  for func in report.hot_functions[:5]:
+      print(f"{func.name}: {func.cumulative_time:.3f}s ({func.percentage:.1f}%)")
+      print(f"  Calls: {func.total_calls:,}")
+      print(f"  File: {func.filename}:{func.line_number}")
+
+Format Report for Terminal:
+  terminal_output = profiler.format_terminal_report(report, show_tree=True)
+  print(terminal_output)
+
+Save Report:
+  json_path = profiler.save_report(report, format="json")
+  md_path = profiler.save_report(report, format="markdown")
+  html_path = profiler.save_report(report, format="html")
+
+Compare Reports:
+  comparison = profiler.compare_reports(
+      baseline_path=Path("baseline.json"),
+      current_path=Path("current.json")
+  )
+  
+  if comparison["regression_detected"]:
+      print(f"[!] Regression: {comparison['time_change_percent']:+.1f}%")
+
+================================================================================
+INTEGRATION WITH OTHER TOOLS
+--------------------------------------------------------------------------------
+
+With AgentHealth:
+  from agenthealth import AgentHealth
+  from profilescope import ProfileScope
+  
+  health = AgentHealth()
+  profiler = ProfileScope()
+  
+  session_id = "perf_test_001"
+  health.start_session("ATLAS", session_id=session_id)
+  
+  report = profiler.profile(Path("script.py"))
+  health.log_metric("ATLAS", "execution_time", report.total_time)
+  health.end_session("ATLAS", session_id=session_id)
+
+With SynapseLink:
+  from synapselink import quick_send
+  from profilescope import ProfileScope
+  
+  profiler = ProfileScope()
+  report = profiler.profile(Path("critical_script.py"))
+  
+  if report.bottlenecks:
+      quick_send(
+          "FORGE,LOGAN",
+          "Performance Issue Detected",
+          "\\n".join(report.bottlenecks),
+          priority="HIGH"
+      )
+
+With TaskQueuePro:
+  from taskqueuepro import TaskQueuePro
+  from profilescope import ProfileScope
+  
+  queue = TaskQueuePro()
+  profiler = ProfileScope()
+  
+  task_id = queue.create_task("Profile script", agent="ATLAS")
+  queue.start_task(task_id)
+  
+  report = profiler.profile(Path("script.py"))
+  
+  queue.complete_task(task_id, result=f"{report.total_time:.3f}s")
+
+With SessionReplay:
+  from sessionreplay import SessionReplay
+  from profilescope import ProfileScope
+  
+  replay = SessionReplay()
+  profiler = ProfileScope()
+  
+  session_id = replay.start_session("ATLAS", task="Performance profiling")
+  
+  try:
+      report = profiler.profile(Path("script.py"))
+      replay.log_output(session_id, f"Profiled in {report.total_time:.3f}s")
+      replay.end_session(session_id, status="COMPLETED")
+  except Exception as e:
+      replay.log_error(session_id, str(e))
+      replay.end_session(session_id, status="FAILED")
+
+================================================================================
+COMMON WORKFLOWS
+--------------------------------------------------------------------------------
+
+Workflow 1: Basic Profiling
+  1. profilescope run script.py
+  2. Read terminal report
+  3. Identify bottlenecks
+  4. Optimize code
+  5. Repeat
+
+Workflow 2: Save for Later Analysis
+  1. profilescope run script.py --format json
+  2. profilescope run script.py --format markdown
+  3. Open Markdown report in browser
+  4. Analyze in detail
+  5. Share with team
+
+Workflow 3: Regression Testing
+  1. Profile baseline: profilescope run app.py --format json
+  2. Save as: mv profilescope_reports/app_*.json baseline.json
+  3. Make code changes
+  4. Profile again: profilescope run app.py --format json
+  5. Save as: mv profilescope_reports/app_*.json current.json
+  6. Compare: profilescope compare baseline.json current.json
+  7. Fix if regression detected
+
+Workflow 4: CI/CD Integration
+  1. Add ProfileScope to CI environment
+  2. Profile in CI: profilescope run tests.py --format json
+  3. Compare with baseline
+  4. Fail build if regression detected (exit code 1)
+
+Workflow 5: Batch Profiling (Python API)
+  from profilescope import ProfileScope
+  from pathlib import Path
+  
+  profiler = ProfileScope()
+  
+  scripts = [Path(f"script{i}.py") for i in range(1, 6)]
+  
+  for script in scripts:
+      report = profiler.profile(script)
+      print(f"{script.name}: {report.total_time:.3f}s")
+
+================================================================================
+REPORT FORMATS
+--------------------------------------------------------------------------------
+
+Terminal (default):
+  - Formatted tables
+  - Hot functions (top 10)
+  - Bottlenecks section
+  - Recommendations
+  - Good for: Quick analysis
+
+JSON:
+  - Structured data
+  - All report fields
+  - Good for: Programmatic analysis, CI/CD, archiving
+
+Markdown:
+  - Human-readable
+  - Tables and sections
+  - Good for: Documentation, sharing with team
+
+HTML:
+  - Browser-viewable
+  - Styled tables
+  - Good for: Presentations, detailed analysis
+
+================================================================================
+UNDERSTANDING REPORTS
+--------------------------------------------------------------------------------
+
+Hot Functions Table:
+  Function   - Function name
+  Time (s)   - Cumulative time spent (includes time in called functions)
+  Calls      - Number of times function was called
+  %          - Percentage of total execution time
+
+Bottlenecks:
+  - Functions taking >10% of total time
+  - Highest priority optimization targets
+  - Usually 1-3 functions
+
+Recommendations:
+  1. Hot path detected        → Focus optimization here (biggest impact)
+  2. High call count         → Reduce calls or cache results
+  3. Recursive function      → Consider iterative or memoized version
+
+Call Tree:
+  - Total Functions: How many unique functions were called
+  - Primitive Calls: Non-recursive call count
+  - Total Calls: Including recursive calls
+
+================================================================================
+TROUBLESHOOTING
+--------------------------------------------------------------------------------
+
+Error: "Script execution failed"
+  → Fix script bugs first before profiling
+  → Test: python script.py (should run without errors)
+
+Error: "File not found: script.py"
+  → Use absolute or correct relative path
+  → Try: profilescope run ./path/to/script.py
+
+Error: Total time = 0.000s
+  → Script executes too fast to measure
+  → Normal for very simple scripts
+  → Add more work to get meaningful profiling
+
+Error: "Permission denied" saving report
+  → Output directory not writable
+  → Use: --output-dir ~/my_reports
+
+Error: "No module named profilescope"
+  → ProfileScope not in path
+  → Use: python /path/to/profilescope.py run script.py
+  → Or: pip install -e /path/to/ProfileScope
+
+Unexpected Results:
+  → Profiling adds ~5-10% overhead (normal)
+  → Very fast functions may not show up (< 0.001s)
+  → Use --tree for more detailed call information
+
+================================================================================
+PERFORMANCE TIPS
+--------------------------------------------------------------------------------
+
+Best Practices:
+  1. Profile with realistic workloads (not toy data)
+  2. Run multiple times to average out variance
+  3. Focus on functions >10% of time (biggest impact)
+  4. Optimize call counts before micro-optimizations
+  5. Use comparison mode to verify improvements
+
+Common Optimization Patterns:
+  1. Cache repeated computations (memoization)
+  2. Batch database/API calls (reduce round trips)
+  3. Use generators instead of lists (memory efficiency)
+  4. Replace recursion with iteration or memoization
+  5. Use built-in functions (usually optimized in C)
+
+When to Profile:
+  - During development (catch issues early)
+  - Before optimization (measure first!)
+  - After optimization (verify improvement)
+  - In CI/CD (detect regressions)
+  - After production incidents (reproduce and analyze)
+
+When NOT to Profile:
+  - Don't profile trivially fast code
+  - Don't optimize without profiling first (premature optimization)
+  - Don't profile broken code (fix bugs first)
+
+================================================================================
+QUICK REFERENCE: FunctionStats Fields
+--------------------------------------------------------------------------------
+
+name                  - Function name (str)
+filename              - Source file path (str)
+line_number           - Line number in source (int)
+total_calls           - Total times called including recursive (int)
+primitive_calls       - Non-recursive call count (int)
+total_time            - Time in function only, excluding callees (float)
+cumulative_time       - Time in function including callees (float)
+time_per_call         - Average time per call (float)
+cumulative_per_call   - Average cumulative time per call (float)
+percentage            - % of total execution time (float)
+
+================================================================================
+QUICK REFERENCE: ProfileReport Fields
+--------------------------------------------------------------------------------
+
+script_path           - Path to profiled script (str)
+total_time            - Total execution time (float)
+total_calls           - Total function calls (int)
+hot_functions         - List of FunctionStats objects
+bottlenecks           - List of bottleneck descriptions (List[str])
+call_tree             - Call tree summary (Dict)
+recommendations       - Optimization suggestions (List[str])
+timestamp             - When profile was run (str)
+
+================================================================================
+RESOURCES
+--------------------------------------------------------------------------------
+
+Documentation:
+  README.md            - Complete user guide
+  EXAMPLES.md          - 10 real-world usage examples
+  INTEGRATION_PLAN.md  - Team Brain integration guide
+  CHEAT_SHEET.txt      - This file!
+
+GitHub:
+  https://github.com/DonkRonk17/ProfileScope
+  
+Issues & Support:
+  https://github.com/DonkRonk17/ProfileScope/issues
+
+Team Brain Ecosystem:
+  https://github.com/DonkRonk17
+
+================================================================================
+QUICK EXAMPLES
+--------------------------------------------------------------------------------
+
+# Profile and print to terminal
+profilescope run myscript.py
+
+# Profile with arguments
+profilescope run myscript.py --input data.csv --output results.json
+
+# Save as JSON
+profilescope run myscript.py --format json
+
+# Save with custom location
+profilescope run myscript.py --format json --output-dir ~/perf_reports
+
+# Show call tree
+profilescope run myscript.py --tree
+
+# Compare two runs
+profilescope compare baseline.json current.json
+
+# Python API
+from profilescope import ProfileScope
+from pathlib import Path
+
+profiler = ProfileScope()
+report = profiler.profile(Path("script.py"))
+print(f"Time: {report.total_time:.3f}s")
+
+for func in report.hot_functions[:5]:
+    print(f"{func.name}: {func.percentage:.1f}%")
+
+================================================================================
+
+Last Updated: February 16, 2026
+Maintained By: ATLAS (Team Brain)

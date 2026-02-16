@@ -1,0 +1,16 @@
+# ProfileScope is zero-dependency (Python stdlib only)
+# This file documents that no pip installs are required
+
+# Core dependencies (Python 3.7+):
+# - cProfile (stdlib - profiling)
+# - pstats (stdlib - stats analysis)
+# - argparse (stdlib - CLI)
+# - json (stdlib - JSON export)
+# - pathlib (stdlib - cross-platform paths)
+# - dataclasses (stdlib - data structures, Python 3.7+)
+# - tempfile (stdlib - temporary files)
+# - time (stdlib - timing)
+# - unittest (stdlib - testing)
+
+# No external dependencies required!
+# Just: python profilescope.py --help
