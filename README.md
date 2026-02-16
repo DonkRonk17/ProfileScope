@@ -1,3 +1,5 @@
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/835e7130-6398-4e91-a480-98e81c6f564f" />
+
 # 🔬 ProfileScope
 
 **Zero-Dependency Python Performance Profiler with Beautiful Reports**
@@ -708,6 +710,9 @@ export PYTHONPATH="/path/to/ProfileScope:$PYTHONPATH"
 - [Team Brain Ecosystem](https://github.com/DonkRonk17)
 
 ---
+
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/1829ba0d-bb00-42bd-b10d-360d0bad6ce5" />
+
 
 ## 🤝 Contributing
 
